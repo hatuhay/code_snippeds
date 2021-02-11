@@ -1,0 +1,67 @@
+<?php
+
+namespace Drupal\sample_settings\Form;
+
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
+
+/**
+ * Class SettingsForm.
+ */
+class SettingsForm extends ConfigFormBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEditableConfigNames() {
+    return [
+      'sample_settings.settings',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId() {
+    return 'settings_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $config = $this->config('sample_settings.settings');
+    $date = $config->get('close_date') ? DrupalDateTime::createFromTimestamp(strtotime($config->get('close_date'))) : new DrupalDateTime('now');
+    $form['pre_air_time'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Pre air time'),
+      '#description' => $this->t('The time (in minutes) before air time a video will be available'),
+      '#maxlength' => 64,
+      '#size' => 64,
+      '#default_value' => $config->get('pre_air_time'),
+    ];
+    $form['close_date'] = [
+      '#type' => 'datetime',
+      '#title' => $this
+        ->t('Event close date/time'),
+      '#size' => 20,
+      '#default_value' => $date,
+    ];
+
+    return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    parent::submitForm($form, $form_state);
+
+    $this->config('sample_settings.settings')
+      ->set('pre_air_time', $form_state->getValue('pre_air_time'))
+      ->set('close_date', (string) $form_state->getValue('close_date'))
+      ->save();
+  }
+
+}
